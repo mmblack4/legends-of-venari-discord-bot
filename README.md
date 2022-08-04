@@ -1,4 +1,4 @@
-# discord-manager-bot
+# Legends Of Venari Discord Bot
 
 This bot is create to manage scholarship and track venari catch in [Legends of venari](https://legendsofvenari.com/)
 
