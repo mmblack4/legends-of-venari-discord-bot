@@ -24,6 +24,9 @@ module.exports = {
         .setDescription("update tier 3 data")
         .setRequired(true),
     )
+    .addChannelOption((option) =>
+      option.setName("summary").setDescription("summary").setRequired(true),
+    )
     .addStringOption((option) =>
       option
         .setName("ephemeral")
@@ -36,6 +39,7 @@ module.exports = {
     const tier1 = interation.options.getChannel("tier1");
     const tier2 = interation.options.getChannel("tier2");
     const tier3 = interation.options.getChannel("tier3");
+    const summary = interation.options.getChannel("summary");
     const ephemeral =
       interation.options.getString("ephemeral") &&
       interation.options.getString("ephemeral").search(/yes/i) !== -1
@@ -59,10 +63,14 @@ module.exports = {
             channelId: tier3.id,
             name: tier3.name,
           },
+          {
+            channelId: summary.id,
+            name: summary.name,
+          },
         ]);
-        content = `channelList ${tier1.toString()},${tier2.toString()},${tier3.toString()} added`;
+        content = `channelList ${tier1.toString()},${tier2.toString()},${tier3.toString()},${summary.toString()} added`;
       } catch (error) {
-        content = `channelList ${tier1.toString()},${tier2.toString()},${tier3.toString()} already added`;
+        content = `channelList ${tier1.toString()},${tier2.toString()},${tier3.toString()},${summary.toString()} already added`;
       }
     }
     try {
