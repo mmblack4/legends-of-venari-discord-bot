@@ -7,6 +7,8 @@ const { Client, Intents, WebhookClient, Collection } = require("discord.js");
 const fs = require("fs");
 const axios = require("axios");
 const moment = require("moment");
+const cron = require("cron");
+const { writeFileSync, existsSync } = require("fs");
 
 // util
 const isAllow = require("./util/isAllow");
@@ -95,7 +97,83 @@ client.on("ready", async () => {
   }
   console.log(`${process.env.NODE_ENV}:${client.user.tag} has logged in.`);
 });
-
+const fetchSummary = async () => {
+  const channelList = await models.ChannelList.findAll();
+  const summaryChannel = await client.channels.fetch(channelList[3].channelId);
+  if (!existsSync("./summary.csv")) {
+    await writeFileSync("./summary.csv", "");
+  }
+  let summary = "";
+  let fileData =
+    "Name,Total experience,Total coin,Total Essence,Total energy\n";
+  const today = new Date();
+  const _summary = await models.LovAddress.findAll({
+    include: [
+      {
+        model: models.LovHistory,
+        attributes: [
+          "lovAddressId",
+          [
+            models.sequelize.fn("sum", models.sequelize.col("experience")),
+            "total_experience",
+          ],
+          [
+            models.sequelize.fn("sum", models.sequelize.col("coin")),
+            "total_coin",
+          ],
+          [
+            models.sequelize.fn("sum", models.sequelize.col("essence")),
+            "total_essence",
+          ],
+          [
+            models.sequelize.fn("sum", models.sequelize.col("energy")),
+            "total_energy",
+          ],
+        ],
+        where: models.sequelize.where(
+          models.sequelize.fn(
+            "date",
+            models.sequelize.col("LovHistories.createdAt"),
+          ),
+          "=",
+          today.toISOString().substring(0, 10),
+        ),
+        required: false,
+      },
+    ],
+    where: { isSummary: true },
+    group: ["walletAddress"],
+  });
+  _summary.map((account) => {
+    const dataValues = account.dataValues.LovHistories[0]
+      ? account.dataValues.LovHistories[0].dataValues
+      : {
+          total_experience: 0,
+          total_coin: 0,
+          total_essence: 0,
+          total_energy: 0,
+        };
+    fileData += `${account.name},${dataValues.total_experience},${dataValues.total_coin},${dataValues.total_essence},${dataValues.total_energy}\n`;
+    summary +=
+      "```Name: " +
+      account.name +
+      ", Total experience: " +
+      dataValues.total_experience +
+      ", Total coin: " +
+      dataValues.total_coin +
+      ", Total Essence: " +
+      dataValues.total_essence +
+      ", Total energy: " +
+      dataValues.total_energy +
+      "```";
+  });
+  await writeFileSync("./summary.csv", fileData);
+  summaryChannel.send({
+    content: "summary", //summary,
+    files: ["./summary.csv"],
+  });
+};
+const summaryJob = new cron.CronJob("00 50 23 * * *", fetchSummary);
 client.on("message", async (message) => {
   if (message.author.bot) return;
   if (message.content.startsWith(PREFIX)) {
@@ -110,6 +188,7 @@ client.on("message", async (message) => {
 
       if (isStartLov) return message.reply("start lov is already running");
       isStartLov = true;
+      summaryJob.start();
       setInterval(async () => {
         const channelList = await models.ChannelList.findAll();
 
@@ -131,7 +210,6 @@ client.on("message", async (message) => {
             if (response.data.data) {
               const _data = response.data.data[0];
 
-              console.log(_data);
               const name = _data.user.username;
               const caught = _data.caught;
               const location = _data.location.name;
@@ -171,7 +249,6 @@ client.on("message", async (message) => {
                       break;
                   }
                 });
-                console.log("dailySummary", dailySummary);
                 if (dailySummary[0] && dailySummary[0].dataValues) {
                   totalCoin = parseInt(dailySummary[0].dataValues.total_coin);
                   totalExperience = parseInt(
