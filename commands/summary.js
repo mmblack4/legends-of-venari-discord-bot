@@ -1,5 +1,5 @@
 const { SlashCommandBuilder } = require("@discordjs/builders");
-const { writeFileSync } = require("fs");
+const { writeFileSync, existsSync } = require("fs");
 const models = require("../models/index");
 const isAllow = require("../util/isAllow");
 
@@ -29,6 +29,9 @@ module.exports = {
     const _isAllow = await isAllow(interation.user, 3);
     if (_isAllow === false) summary = "Only Admin can get summary";
     else {
+      if (!existsSync("./summary.csv")) {
+        await writeFileSync("./summary.csv", "");
+      }
       try {
         const today = new Date();
         const _summary = await models.LovAddress.findAll({
