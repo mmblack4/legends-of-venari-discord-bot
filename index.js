@@ -127,7 +127,6 @@ client.on("message", async (message) => {
         addresList.map(async ({ walletAddress, id }) => {
           const url = `https://api.legendsofvenari.com/expeditions/history?limit=3&user=${walletAddress}`;
           try {
-            console.log(url);
             const response = await axios.get(url);
             if (response.data.data) {
               const _data = response.data.data[0];
@@ -142,7 +141,7 @@ client.on("message", async (message) => {
               let coin = 0;
               let experience = 0;
               let essence = 0;
-              let energy = Land[location];
+              let energy = Land[location] ? Land[location] : 0;
               //total
               let totalCoin = 0;
               let totalExperience = 0;
@@ -250,11 +249,12 @@ client.on("message", async (message) => {
                 });
               }
             }
-          } catch {
+          } catch (error) {
             console.log("api error");
+            console.log(error);
           }
         });
-      }, 60000);
+      }, process.env.COOL_DOWN_TIME);
       message.reply("start lov is running");
     }
   }
