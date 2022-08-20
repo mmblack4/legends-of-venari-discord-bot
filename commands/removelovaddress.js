@@ -6,19 +6,26 @@ const isAllow = require("../util/isAllow");
 module.exports = {
   data: new SlashCommandBuilder()
     .setName("removelovaddress")
-    .setDescription("removelovaddress")
+    .setDescription("remove lov address from venari catch and summary")
     .addStringOption((option) =>
       option
         .setName("walletaddress")
-        .setDescription("lov wallet Address.")
+        .setDescription("lov wallet address")
         .setRequired(true),
+    )
+    .addBooleanOption((option) =>
+      option
+        .setName("private")
+        .setDescription("yes mean only you can see a message")
+        .setRequired(false),
     ),
-  async execute(interation) {
+  async execute(integration) {
     let content = "test ok";
-    const walletAddress = interation.options.getString("walletaddress");
-    const _isAllow = await isAllow(interation.user);
+    const walletAddress = integration.options.getString("walletaddress");
+    const _isAllow = await isAllow(integration.user);
+    const ephemeral = integration.options.getBoolean("private");
 
-    if (_isAllow === false) content = "Only Super Admin can add user";
+    if (!_isAllow) content = "Only admin can add user";
     else {
       const _walletAddress = await models.LovAddress.findAll({
         where: { walletAddress },
@@ -34,8 +41,9 @@ module.exports = {
       }
     }
 
-    interation.reply({
+    integration.reply({
       content: `${content}`,
+      ephemeral: ephemeral,
     });
   },
 };

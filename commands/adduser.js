@@ -5,39 +5,36 @@ const isAllow = require("../util/isAllow");
 module.exports = {
   data: new SlashCommandBuilder()
     .setName("adduser")
-    .setDescription("add user how can manage!")
+    .setDescription("user can add address, fetch summary and manage address!")
     .addUserOption((option) =>
       option
         .setName("user")
-        .setDescription("how want to add")
+        .setDescription("who want to add")
         .setRequired(true),
     )
     .addStringOption((option) =>
       option
         .setName("role")
-        .setDescription("super admin: 1, admin: 2, user: 3")
+        .setDescription("admin: 1, manager: 2, guest: 3")
         .setRequired(true),
     )
-    .addStringOption((option) =>
+    .addBooleanOption((option) =>
       option
-        .setName("ephemeral")
+        .setName("private")
         .setDescription("yes mean only you can see a message")
         .setRequired(false),
     ),
 
-  async execute(interation) {
+  async execute(integration) {
     let content = "test ok";
-    const user = interation.options.getUser("user");
-    const role = interation.options.getString("role");
-    const ephemeral =
-      interation.options.getString("ephemeral") &&
-      interation.options.getString("ephemeral").search(/yes/i) !== -1
-        ? true
-        : false;
-    console.log(user, interation.user);
-    const _isAllow = await isAllow(interation.user);
+    const user = integration.options.getUser("user");
+    const role = integration.options.getString("role");
+    const ephemeral = integration.options.getBoolean("private");
 
-    if (_isAllow === false) content = "Only Super Admin can add user";
+    console.log(user, integration.user);
+    const _isAllow = await isAllow(integration.user);
+
+    if (!_isAllow) content = "Only admin can add user";
     else if (user.bot) {
       content = "user can't be bot";
     } else {
@@ -48,7 +45,7 @@ module.exports = {
           role,
         });
         content = `${user.username} added as a ${
-          _user.role == 1 ? "Super Admin" : _user.role == 2 ? "Admin" : "User"
+          _user.role == 1 ? "admin" : _user.role == 2 ? "manager" : "guest"
         }`;
       } catch (err) {
         content = `${user.username} already added`;
@@ -58,7 +55,7 @@ module.exports = {
     } catch (err) {
       content = `Input is ${err}`;
     }
-    interation.reply({
+    integration.reply({
       content: `${content}`,
       ephemeral: ephemeral,
     });

@@ -9,6 +9,10 @@ lerna-debug.log*
 # Data base
 *.sqlite
 
+# Database back
+backup.sql
+
+# summary file
 *.csv
 
 # Diagnostic reports (https://nodejs.org/api/report.html)

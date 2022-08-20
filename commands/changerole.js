@@ -5,38 +5,34 @@ const isAllow = require("../util/isAllow");
 module.exports = {
   data: new SlashCommandBuilder()
     .setName("changerole")
-    .setDescription("add user how can manage!")
+    .setDescription("change role to added user")
     .addUserOption((option) =>
       option
         .setName("user")
-        .setDescription("how want to add")
+        .setDescription("who want to add")
         .setRequired(true),
     )
     .addStringOption((option) =>
       option
         .setName("role")
-        .setDescription("super admin: 1, admin: 2, user: 3")
+        .setDescription("admin: 1, manager: 2, guest: 3")
         .setRequired(true),
     )
-    .addStringOption((option) =>
+    .addBooleanOption((option) =>
       option
-        .setName("ephemeral")
+        .setName("private")
         .setDescription("yes mean only you can see a message")
         .setRequired(false),
     ),
 
-  async execute(interation) {
+  async execute(integration) {
     let content = "test ok";
-    const user = interation.options.getUser("user");
-    const role = interation.options.getString("role");
-    const ephemeral =
-      interation.options.getString("ephemeral") &&
-      interation.options.getString("ephemeral").search(/yes/i) !== -1
-        ? true
-        : false;
-    const _isAllow = await isAllow(interation.user);
+    const user = integration.options.getUser("user");
+    const role = integration.options.getString("role");
+    const ephemeral = integration.options.getBoolean("private");
+    const _isAllow = await isAllow(integration.user);
 
-    if (_isAllow === false) content = "Only Super Admin can add user";
+    if (!_isAllow) content = "Only admin can add user";
     else if (user.bot) content = "user can't be bot";
     else {
       const _user = await models.Users.findAll({
@@ -53,13 +49,13 @@ module.exports = {
           },
         );
         content = `${user.username} added as a ${
-          role == 1 ? "Super Admin" : role == 2 ? "Admin" : "User"
+          role == 1 ? "admin" : role == 2 ? "manager" : "guest"
         }`;
       } else {
         content = `${user.username} user not added`;
       }
     }
-    interation.reply({
+    integration.reply({
       content: `${content}`,
       ephemeral: ephemeral,
     });

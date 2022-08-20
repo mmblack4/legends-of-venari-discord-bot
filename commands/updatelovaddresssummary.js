@@ -6,11 +6,11 @@ const isAllow = require("../util/isAllow");
 module.exports = {
   data: new SlashCommandBuilder()
     .setName("updatelovaddresssummary")
-    .setDescription("update Lov address summary")
+    .setDescription("update Lov address summary want or not")
     .addStringOption((option) =>
       option
         .setName("walletaddress")
-        .setDescription("lov wallet Address.")
+        .setDescription("lov wallet address")
         .setRequired(true),
     )
     .addBooleanOption((option) =>
@@ -18,14 +18,21 @@ module.exports = {
         .setName("issummary")
         .setDescription("Need summary for this Address")
         .setRequired(true),
+    )
+    .addBooleanOption((option) =>
+      option
+        .setName("private")
+        .setDescription("yes mean only you can see a message")
+        .setRequired(false),
     ),
-  async execute(interation) {
+  async execute(integration) {
     let content = "test ok";
-    const walletAddress = interation.options.getString("walletaddress");
-    const isSummary = interation.options.getBoolean("issummary");
-    const _isAllow = await isAllow(interation.user);
+    const walletAddress = integration.options.getString("walletaddress");
+    const isSummary = integration.options.getBoolean("issummary");
+    const ephemeral = integration.options.getBoolean("private");
+    const _isAllow = await isAllow(integration.user);
 
-    if (_isAllow === false) content = "Only Super Admin can add user";
+    if (!_isAllow) content = "Only admin can add user";
     else {
       const _walletAddress = await models.LovAddress.findAll({
         where: { walletAddress },
@@ -44,8 +51,9 @@ module.exports = {
       }
     }
 
-    interation.reply({
+    integration.reply({
       content: `${content}`,
+      ephemeral: ephemeral,
     });
   },
 };

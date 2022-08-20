@@ -5,52 +5,52 @@ const isAllow = require("../util/isAllow");
 module.exports = {
   data: new SlashCommandBuilder()
     .setName("addchannel")
-    .setDescription("addchannel")
+    .setDescription("Add channel to show venari catch and summary")
     .addChannelOption((option) =>
       option
         .setName("tier1")
-        .setDescription("update tier 1 data")
+        .setDescription("update tier 1 venari catch")
         .setRequired(true),
     )
     .addChannelOption((option) =>
       option
         .setName("tier2")
-        .setDescription("update tier 2 data")
+        .setDescription("update tier 2 venari catch")
         .setRequired(true),
     )
     .addChannelOption((option) =>
       option
         .setName("tier3")
-        .setDescription("update tier 3 data")
+        .setDescription("update tier 3 venari catch")
         .setRequired(true),
     )
     .addChannelOption((option) =>
-      option.setName("summary").setDescription("summary").setRequired(true),
-    )
-    .addStringOption((option) =>
       option
-        .setName("ephemeral")
+        .setName("summary")
+        .setDescription("update daily summary")
+        .setRequired(true),
+    )
+    .addBooleanOption((option) =>
+      option
+        .setName("private")
         .setDescription("yes mean only you can see a message")
         .setRequired(false),
     ),
 
-  async execute(interation) {
+  async execute(integration) {
     let content = "test ok";
-    const tier1 = interation.options.getChannel("tier1");
-    const tier2 = interation.options.getChannel("tier2");
-    const tier3 = interation.options.getChannel("tier3");
-    const summary = interation.options.getChannel("summary");
-    const ephemeral =
-      interation.options.getString("ephemeral") &&
-      interation.options.getString("ephemeral").search(/yes/i) !== -1
-        ? true
-        : false;
+    const tier1 = integration.options.getChannel("tier1");
+    const tier2 = integration.options.getChannel("tier2");
+    const tier3 = integration.options.getChannel("tier3");
+    const summary = integration.options.getChannel("summary");
+    const ephemeral = integration.options.getBoolean("private");
 
     const _isAllow = await isAllow(interation.user, 2);
-    if (_isAllow === false) content = "Only Admin can add webhook";
+
+    if (!_isAllow) content = "only admin can add channel";
     else {
       try {
-        const channelList = await models.ChannelList.bulkCreate([
+        await models.ChannelList.bulkCreate([
           {
             channelId: tier1.id,
             name: tier1.name,
@@ -77,7 +77,7 @@ module.exports = {
     } catch (err) {
       content = `Input is ${err}`;
     }
-    interation.reply({
+    integration.reply({
       content: `${content}`,
       ephemeral: ephemeral,
     });

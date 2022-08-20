@@ -5,7 +5,7 @@ const isAllow = require("../util/isAllow");
 module.exports = {
   data: new SlashCommandBuilder()
     .setName("addlovaddress")
-    .setDescription("add lov address")
+    .setDescription("add lov address to get venari catch and summary")
     .addStringOption((option) =>
       option
         .setName("name")
@@ -15,33 +15,33 @@ module.exports = {
     .addStringOption((option) =>
       option
         .setName("walletaddress")
-        .setDescription("lov wallet Address.")
+        .setDescription("lov ether wallet address")
         .setRequired(true),
     )
     .addBooleanOption((option) =>
       option
         .setName("issummary")
-        .setDescription("Need summary for this Address")
+        .setDescription("Need summary for this address")
         .setRequired(false),
     )
     .addBooleanOption((option) =>
       option
-        .setName("ephemeral")
+        .setName("private")
         .setDescription("yes mean only you can see a message")
         .setRequired(false),
     ),
 
-  async execute(interation) {
+  async execute(integration) {
     let content = "test ok";
-    const name = interation.options.getString("name");
-    const walletAddress = interation.options.getString("walletaddress");
+    const name = integration.options.getString("name");
+    const walletAddress = integration.options.getString("walletaddress");
     const isSummary =
-      interation.options.getBoolean("issummary") !== null
-        ? interation.options.getBoolean("issummary")
+      integration.options.getBoolean("issummary") !== null
+        ? integration.options.getBoolean("issummary")
         : true;
-    const ephemeral = interation.options.getBoolean("ephemeral");
+    const ephemeral = integration.options.getBoolean("private");
 
-    const _isAllow = await isAllow(interation.user, 2);
+    const _isAllow = await isAllow(integration.user, 2);
     if (_isAllow === false) content = "Only Admin can add LovAddress";
     else {
       try {
@@ -59,7 +59,7 @@ module.exports = {
     } catch (err) {
       content = `Input is ${err}`;
     }
-    interation.reply({
+    integration.reply({
       content: `${content}`,
       ephemeral: ephemeral,
     });

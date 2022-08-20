@@ -6,28 +6,28 @@ const isAllow = require("../util/isAllow");
 module.exports = {
   data: new SlashCommandBuilder()
     .setName("summary")
-    .setDescription("Pong!")
+    .setDescription("fetch venari catch summary for all player")
     .addBooleanOption((option) =>
       option
         .setName("today")
-        .setDescription("fetch today summary only")
+        .setDescription("filter by today catch only")
         .setRequired(false),
     )
     .addBooleanOption((option) =>
       option
-        .setName("ephemeral")
+        .setName("private")
         .setDescription("yes mean only you can see a message")
         .setRequired(false),
     ),
 
-  async execute(interation) {
-    const istoday = interation.options.getBoolean("today");
-    const ephemeral = interation.options.getBoolean("ephemeral");
+  async execute(integration) {
+    const isToday = integration.options.getBoolean("today");
+    const ephemeral = integration.options.getBoolean("ephemeral");
     let summary = "";
     let fileData =
       "Name,Total experience,Total coin,Total Essence,Total energy\n";
-    const _isAllow = await isAllow(interation.user, 3);
-    if (_isAllow === false) summary = "Only Admin can get summary";
+    const _isAllow = await isAllow(integration.user, 3);
+    if (!_isAllow) summary = "Only Admin can get summary";
     else {
       if (!existsSync("./summary.csv")) {
         await writeFileSync("./summary.csv", "");
@@ -60,7 +60,7 @@ module.exports = {
                   "total_energy",
                 ],
               ],
-              where: istoday
+              where: isToday
                 ? models.sequelize.where(
                     models.sequelize.fn(
                       "date",
@@ -98,47 +98,13 @@ module.exports = {
             ", Total energy: " +
             dataValues.total_energy +
             "```";
-          // summary.push({
-          //   fields: [
-          //     {
-          //       name: "Date",
-          //       value: istoday ? today.toISOString().substring(0, 10) : "All",
-          //       inline: false,
-          //     },
-          //     {
-          //       name: "Name",
-          //       value: "```" + account.name + "```",
-          //       inline: false,
-          //     },
-          //     {
-          //       name: "Total experience",
-          //       value: "```" + dataValues.total_experience + "```",
-          //       inline: true,
-          //     },
-          //     {
-          //       name: "Total coin",
-          //       value: "```" + dataValues.total_coin + "```",
-          //       inline: false,
-          //     },
-          //     {
-          //       name: "Total Essence",
-          //       value: "```" + dataValues.total_essence + "```",
-          //       inline: true,
-          //     },
-          //     {
-          //       name: "Total energy",
-          //       value: "```" + dataValues.total_energy + "```",
-          //       inline: true,
-          //     },
-          //   ],
-          // });
         });
         await writeFileSync("./summary.csv", fileData);
       } catch (err) {
         summary = `Input is ${err}`;
       }
     }
-    interation.reply({
+    integration.reply({
       content: "summary", //summary,
       files: _isAllow ? ["./summary.csv"] : [],
       ephemeral: ephemeral,
